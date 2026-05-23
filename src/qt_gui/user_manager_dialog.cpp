@@ -24,7 +24,8 @@ UserManagerDialog::UserManagerDialog(QWidget* parent) : QDialog(parent) {
     m_table->setColumnCount(4); // User ID, Name, Color, Port
     m_table->setCornerButtonEnabled(false);
     m_table->setAlternatingRowColors(true);
-    m_table->setHorizontalHeaderLabels({"User ID", "User Name", "Color", "Controller Port"});
+    m_table->setHorizontalHeaderLabels(
+        {tr("User ID"), tr("User Name"), tr("Color"), tr("Controller Port")});
     m_table->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->horizontalHeader()->setDefaultSectionSize(150);
@@ -249,6 +250,7 @@ void UserManagerDialog::OnUserRename() {
     u32 id = GetUserKey();
     if (id == 0)
         return;
+
     User* user = UserManagement.GetUserByID(id);
     if (!user)
         return;
@@ -292,16 +294,36 @@ void UserManagerDialog::OnUserSetColor() {
     u32 id = GetUserKey();
     if (id == 0)
         return;
+
     User* user = UserManagement.GetUserByID(id);
     if (!user)
         return;
 
-    QStringList colors = {"Blue", "Red", "Green", "Pink"};
+    struct ColorOption {
+        QString key;
+        QString text;
+    };
+
+    QList<ColorOption> colors = {
+        {"Blue", tr("Blue")}, {"Red", tr("Red")}, {"Green", tr("Green")}, {"Pink", tr("Pink")}};
+
+    QStringList displayColors;
+    for (const auto& c : colors)
+        displayColors << c.text;
+
     bool ok = false;
-    QString color = QInputDialog::getItem(this, tr("Set User Color"), tr("Select color:"), colors,
-                                          user->user_color, false, &ok);
+
+    QString selected = QInputDialog::getItem(this, tr("Set User Color"), tr("Select color:"),
+                                             displayColors, user->user_color, false, &ok);
+
     if (ok) {
-        user->user_color = colors.indexOf(color);
+        for (int i = 0; i < colors.size(); ++i) {
+            if (colors[i].text == selected) {
+                user->user_color = i;
+                break;
+            }
+        }
+
         UpdateTable();
     }
 }
